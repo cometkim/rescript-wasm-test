@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>(build: js_of_ocaml)</title>
+  </head>
+  <body>
+    <script src="./jsoo/playground_main.js"></script>
+    <script src="./jsoo/compiler_builtins.js"></script>
+    <script type="module">
+      const compiler = rescript_compiler.make();
+      console.log(compiler);
+    </script>
+  </body>
+</html>
