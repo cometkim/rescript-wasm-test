@@ -1,4 +1,8 @@
 {
   "name": "test-res-wasm",
-  "packageManager": "yarn@4.0.2"
+  "private": true,
+  "packageManager": "yarn@4.0.2",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
 }

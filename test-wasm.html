@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>(build: wasm_of_ocaml)</title>
+  </head>
+  <body>
+    <script type="module">
+      import { cwd, fs, initialize } from '/wasm/playground_main.mjs';
+      import { register } from './wasm/compiler_builtins.mjs';
+
+      const rescript_compiler = await initialize();
+
+      fs.mkdirSync(cwd, { recursive: true });
+      register((file, content) => {
+        // console.log(`register ${file}`);
+        fs.writeFileSync(file, content, { recursive: true });
+      });
+
+      const compiler = rescript_compiler.make();
+      console.log(compiler);
+    </script>
+  </body>
+</html>
