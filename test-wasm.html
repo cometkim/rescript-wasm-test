@@ -26,6 +26,39 @@
     }
   </style>
   <script type="module">
+    import {fs, initialize} from '/wasm/playground_main.mjs';
+
+    import {load as loadBuiltins} from './wasm/compiler_builtins.mjs';
+    import {load as loadReact} from './wasm/react.mjs';
+
+
+    function register(file, content) {
+      console.log(`registered ${file}`);
+      fs.writeFileSync(file, content, {encoding: "ascii", recursive: true});
+    }
+    fs.mkdirSync("/static", {recursive: true});
+    loadBuiltins(register);
+    loadReact(register);
+
+    const rescript_compiler = await initialize();
+    const {rescript} = rescript_compiler.make();
+    console.log('Compiler ready', rescript);
+
+    const $src = document.getElementById("src");
+    const $dst = document.getElementById("dst");
+    const $meter = document.getElementById("meter");
+    const $button = document.getElementById("compile");
+
+    $button.onclick = function compileTest() {
+      const input = $src.value;
+      const startAt = performance.now();
+      const result = rescript.compile(input);
+      const endAt = performance.now();
+      $dst.value = result.js_code;
+      $meter.innerText = `Compiled in ${endAt - startAt}ms`;
+    };
+  </script>
+  <script type="module">
     document.getElementById("src").value = `
 module CounterMessage = {
   @react.component
@@ -75,39 +108,6 @@ module App = {
     </div>
   }
 }`.trimStart();
-  </script>
-  <script type="module">
-    import {fs, initialize} from '/wasm/playground_main.mjs';
-
-    import {load as loadBuiltins} from './wasm/compiler_builtins.mjs';
-    import {load as loadReact} from './wasm/react.mjs';
-
-
-    function register(file, content) {
-      console.log(`registered ${file}`);
-      fs.writeFileSync(file, content, {encoding: "ascii", recursive: true});
-    }
-    fs.mkdirSync("/static", {recursive: true});
-    loadBuiltins(register);
-    loadReact(register);
-
-    const rescript_compiler = await initialize();
-    const {rescript} = rescript_compiler.make();
-    console.log('Compiler ready', rescript);
-
-    const $src = document.getElementById("src");
-    const $dst = document.getElementById("dst");
-    const $meter = document.getElementById("meter");
-    const $button = document.getElementById("compile");
-
-    $button.onclick = function compileTest() {
-      const input = $src.value;
-      const startAt = performance.now();
-      const result = rescript.compile(input);
-      const endAt = performance.now();
-      $dst.value = result.js_code;
-      $meter.innerText = `Compiled in ${endAt - startAt}ms`;
-    };
   </script>
 </body>
 

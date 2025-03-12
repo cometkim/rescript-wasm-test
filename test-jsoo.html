@@ -26,6 +26,28 @@
     }
   </style>
   <script type="module">
+    import './jsoo/playground_main.mjs';
+    import './jsoo/compiler_builtins.mjs';
+    import './jsoo/react.mjs';
+
+    const {rescript} = rescript_compiler.make();
+    console.log('Compiler ready', rescript);
+
+    const $src = document.getElementById("src");
+    const $dst = document.getElementById("dst");
+    const $meter = document.getElementById("meter");
+    const $button = document.getElementById("compile");
+
+    $button.onclick = function compileTest() {
+      const input = $src.value;
+      const startAt = performance.now();
+      const result = rescript.compile(input);
+      const endAt = performance.now();
+      $dst.value = result.js_code;
+      $meter.innerText = `Compiled in ${endAt - startAt}ms`;
+    };
+  </script>
+  <script type="module">
     document.getElementById("src").value = `
 module CounterMessage = {
   @react.component
@@ -76,28 +98,7 @@ module App = {
   }
 }`.trimStart();
   </script>
-  <script type="module">
-    import './jsoo/playground_main.mjs';
-    import './jsoo/compiler_builtins.mjs';
-    import './jsoo/react.mjs';
 
-    const {rescript} = rescript_compiler.make();
-    console.log('Compiler ready', rescript);
-
-    const $src = document.getElementById("src");
-    const $dst = document.getElementById("dst");
-    const $meter = document.getElementById("meter");
-    const $button = document.getElementById("compile");
-
-    $button.onclick = function compileTest() {
-      const input = $src.value;
-      const startAt = performance.now();
-      const result = rescript.compile(input);
-      const endAt = performance.now();
-      $dst.value = result.js_code;
-      $meter.innerText = `Compiled in ${endAt - startAt}ms`;
-    };
-  </script>
 </body>
 
 </html>
