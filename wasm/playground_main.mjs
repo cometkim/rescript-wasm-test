@@ -2,7 +2,7 @@ import fs from "https://esm.sh/memfs@4.17.0";
 
 export { fs };
 export const cwd = "/";
-export const src = new URL("/wasm/playground_main.wasm", import.meta.url);
+export const src = new URL("/wasm/playground_main-O3.wasm", import.meta.url);
 
 const {
   promise: compiler,
