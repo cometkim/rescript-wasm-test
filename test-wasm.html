@@ -1,24 +1,114 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title>(build: wasm_of_ocaml)</title>
-  </head>
-  <body>
-    <script type="module">
-      import { cwd, fs, initialize } from '/wasm/playground_main.mjs';
-      import { register } from './wasm/compiler_builtins.mjs';
 
-      const rescript_compiler = await initialize();
+<head>
+  <meta charset="utf-8">
+  <title>(build: wasm_of_ocaml)</title>
+</head>
 
-      fs.mkdirSync(cwd, { recursive: true });
-      register((file, content) => {
-        // console.log(`register ${file}`);
-        fs.writeFileSync(file, content, { recursive: true });
-      });
+<body>
+  <div>
+    <button id="compile">Compile!</button>
+    <span id="meter"></span>
+  </div>
+  <div class="editor">
+    <textarea id="src" rows="50"></textarea>
+    <textarea id="dst"></textarea>
+  </div>
+  <style>
+    .editor {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
 
-      const compiler = rescript_compiler.make();
-      console.log(compiler);
-    </script>
-  </body>
+    .editor textarea {
+      resize: horizontal;
+    }
+  </style>
+  <script type="module">
+    document.getElementById("src").value = `
+module CounterMessage = {
+  @react.component
+  let make = (~count, ~username=?) => {
+    let times = switch count {
+    | 1 => "once"
+    | 2 => "twice"
+    | n => Belt.Int.toString(n) ++ " times"
+    }
+
+    let name = switch username {
+    | Some("") => "Anonymous"
+    | Some(name) => name
+    | None => "Anonymous"
+    }
+
+    <div> {React.string(\`Hello \${name}, you clicked me \` ++ times)} </div>
+  }
+}
+
+module App = {
+  @react.component
+  let make = () => {
+    let (count, setCount) = React.useState(() => 0)
+    let (username, setUsername) = React.useState(() => "Anonymous")
+
+    <div>
+      {React.string("Username: ")}
+      <input
+        type_="text"
+        value={username}
+        onChange={event => {
+          event->ReactEvent.Form.preventDefault
+          let eventTarget = event->ReactEvent.Form.target
+          let username = eventTarget["value"]
+          setUsername(_prev => username)
+        }}
+      />
+      <button
+        onClick={_evt => {
+          setCount(prev => prev + 1)
+        }}>
+        {React.string("Click me")}
+      </button>
+      <button onClick={_evt => setCount(_ => 0)}> {React.string("Reset")} </button>
+      <CounterMessage count username />
+    </div>
+  }
+}`.trimStart();
+  </script>
+  <script type="module">
+    import {fs, initialize} from '/wasm/playground_main.mjs';
+
+    import {load as loadBuiltins} from './wasm/compiler_builtins.mjs';
+    import {load as loadReact} from './wasm/react.mjs';
+
+
+    function register(file, content) {
+      console.log(`registered ${file}`);
+      fs.writeFileSync(file, content, {encoding: "ascii", recursive: true});
+    }
+    fs.mkdirSync("/static", {recursive: true});
+    loadBuiltins(register);
+    loadReact(register);
+
+    const rescript_compiler = await initialize();
+    const {rescript} = rescript_compiler.make();
+    console.log('Compiler ready', rescript);
+
+    const $src = document.getElementById("src");
+    const $dst = document.getElementById("dst");
+    const $meter = document.getElementById("meter");
+    const $button = document.getElementById("compile");
+
+    $button.onclick = function compileTest() {
+      const input = $src.value;
+      const startAt = performance.now();
+      const result = rescript.compile(input);
+      const endAt = performance.now();
+      $dst.value = result.js_code;
+      $meter.innerText = `Compiled in ${endAt - startAt}ms`;
+    };
+  </script>
+</body>
+
 </html>

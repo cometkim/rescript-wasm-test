@@ -1,131 +1,108 @@
-import fs from "https://esm.sh/memfs@4.6.0";
+import fs from "https://esm.sh/memfs@4.17.0";
 
-const cwd = "/static";
-const src = new URL("/jsoo_playground_main.wasm", import.meta.url);
+export { fs };
+export const cwd = "/";
+export const src = new URL("/wasm/playground_main.wasm", import.meta.url);
 
-function defer() {
-  let resolve;
-  let reject;
-  const deferred = new Promise((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return Object.assign(deferred, { resolve, reject });
+const {
+  promise: compiler,
+  resolve: setCompiler,
+} = Promise.withResolvers();
+
+function abs(path) {
+  return path.startsWith("/") ? path : cwd + path;
 }
 
-const instance = defer();
-
-const noop = () => {};
-const na = (label) => {
+function na(label) {
   throw new Error(`${label} is not available`);
 };
 
-const evalFn = (
-  (joo_global_object, jsoo_exports, globalThis) => (x) =>
-    eval(x)
-)(globalThis, globalThis, globalThis);
-
-const open_flags = [
-  fs.constants.RDONLY,
-  fs.constants.O_WRONLY,
-  fs.constants.O_APPEND,
-  fs.constants.O_CREAT,
-  fs.constants.O_TRUNC,
-  fs.constants.O_EXCL,
-  fs.constants.O_NONBLOCK,
-];
-
-const math = {
-  cos: Math.cos,
-  sin: Math.sin,
-  tan: Math.tan,
-  acos: Math.acos,
-  asin: Math.asin,
-  atan: Math.atan,
-  cosh: Math.cosh,
-  sinh: Math.sinh,
-  tanh: Math.tanh,
-  acosh: Math.acosh,
-  asinh: Math.asinh,
-  atanh: Math.atanh,
-  cbrt: Math.cbrt,
-  exp: Math.exp,
-  expm1: Math.expm1,
-  log: Math.log,
-  log1p: Math.log1p,
-  log2: Math.log2,
-  log10: Math.log10,
-  atan2: Math.atan2,
-  hypot: Math.hypot,
-  pow: Math.pow,
-  fmod: (x, y) => x % y,
-};
-
-const strings = [
-  "Undefined_recursive_module",
-  "Assert_failure",
-  "Sys_blocked_io",
-  "Stack_overflow",
-  "Match_failure",
-  "Not_found",
-  "Division_by_zero",
-  "End_of_file",
-  "Invalid_argument",
-  "Failure",
-  "Sys_error",
-  "Out_of_memory",
-  "success",
-  "warning_flag_error",
-  "11.0.0-rc.7",
-  "warning_error",
-  "unexpected_error",
-];
-
+const strings = ["12.0.0-alpha.10", "5", "warning_error", "success", "warning_flag_error", "res", "unexpected_error"];
 const fragments = {
-  get_Array: (o) => o.Array,
-  get_Date: (o) => o.Date,
-  get_Error: (o) => o.Error,
-  get_JSON: (o) => o.JSON,
-  get_Math: (o) => o.Math,
-  get_Object: (o) => o.Object,
-  get_RegExp: (o) => o.RegExp,
-  get_String: (o) => o.String,
-  meth_call_0_toString: (o) => o.toString(),
-  obj_0: (x0, x1, x2) => ({ api: x0, version: x1, make: x2 }),
-  obj_1: (x0, x1, x2, x3) => ({
-    js_code: x0,
-    warnings: x1,
-    type_hints: x2,
-    type: x3,
+  get_Array: (a) => a.Array,
+  get_Date: (a) => a.Date,
+  get_Error: (a) => a.Error,
+  get_JSON: (a) => a.JSON,
+  get_Math: (a) => a.Math,
+  get_Object: (a) => a.Object,
+  get_RegExp: (a) => a.RegExp,
+  get_String: (a) => a.String,
+  get_length: (a) => a.length,
+  js_expr_12c48ca8: () => ({}),
+  js_expr_21711c2a: () => ({}),
+  js_expr_2d7ff750: () =>
+    function(a) {
+      throw a;
+    },
+  meth_call_0_toString: (a) => a.toString(),
+  obj_0: (a, b, c) => ({
+    api_version: a,
+    version: b,
+    make: c,
   }),
-  obj_10: (x0, x1) => ({ msg: x0, type: x1 }),
-  obj_2: (x0, x1, x2) => ({ msg: x0, warn_flags: x1, type: x2 }),
-  obj_3: (x0, x1) => ({ line: x0, col: x1 }),
-  obj_4: (x0, x1) => ({ line: x0, col: x1 }),
-  obj_5: (x0, x1, x2, x3) => ({ start: x0, end: x1, kind: x2, hint: x3 }),
-  obj_6: (x0, x1, x2, x3, x4, x5, x6, x7, x8) => ({
-    version: x0,
-    ocaml: x1,
-    rescript: x2,
-    convertSyntax: x3,
-    setModuleSystem: x4,
-    setFilename: x5,
-    setWarnFlags: x6,
-    setOpenModules: x7,
-    getConfig: x8,
+  obj_1: (a, b, c, d, e, f, g, h) => ({
+    version: a,
+    rescript: b,
+    convertSyntax: c,
+    setModuleSystem: d,
+    setFilename: e,
+    setWarnFlags: f,
+    setOpenModules: g,
+    getConfig: h,
   }),
-  obj_7: (x0, x1, x2, x3) => ({
-    module_system: x0,
-    warn_flags: x1,
-    uncurried: x2,
-    open_modules: x3,
+  obj_10: (a, b) => ({
+    msg: a,
+    type: b,
   }),
-  obj_8: (x0, x1) => ({ errors: x0, type: x1 }),
-  obj_9: (x0, x1, x2, x3) => ({ code: x0, fromLang: x1, toLang: x2, type: x3 }),
-  set_rescript_compiler: (o, v) => instance.resolve(v),
+  obj_2: (a, b, c) => ({
+    module_system: a,
+    warn_flags: b,
+    open_modules: c,
+  }),
+  obj_3: (a, b) => ({
+    errors: a,
+    type: b,
+  }),
+  obj_4: (a, b, c, d) => ({
+    js_code: a,
+    warnings: b,
+    type_hints: c,
+    type: d,
+  }),
+  obj_5: (a, b, c) => ({
+    msg: a,
+    warn_flags: b,
+    type: c,
+  }),
+  obj_6: (a, b) => ({
+    line: a,
+    col: b,
+  }),
+  obj_7: (a, b) => ({
+    line: a,
+    col: b,
+  }),
+  obj_8: (a, b, c, d) => ({
+    start: a,
+    end: b,
+    kind: c,
+    hint: d,
+  }),
+  obj_9: (a, b, c, d) => ({
+    code: a,
+    fromLang: b,
+    toLang: c,
+    type: d,
+  }),
+  set_rescript_compiler: (a, b) => setCompiler(b),
 };
 
-let typed_arrays = [
+const M = {
+  ...Math,
+  fmod: (a, b) => a % b,
+};
+
+const u = [
   Float32Array,
   Float64Array,
   Int8Array,
@@ -139,382 +116,430 @@ let typed_arrays = [
   Float32Array,
   Float64Array,
   Uint8Array,
+  Uint16Array,
   Uint8ClampedArray,
 ];
 
-const out_channels = {
+const open_flags = [
+  fs.constants.RDONLY,
+  fs.constants.O_WRONLY,
+  fs.constants.O_RDWR,
+  fs.constants.O_APPEND,
+  fs.constants.O_CREAT,
+  fs.constants.O_TRUNC,
+  fs.constants.O_EXCL,
+  fs.constants.O_NONBLOCK,
+];
+
+var c = {
   map: new WeakMap(),
   set: new Set(),
-  finalization: new FinalizationRegistry((ref) => out_channels.set.delete(ref)),
+  finalization: new FinalizationRegistry((a) => c.set.delete(a)),
 };
 
-function register_channel(ch) {
-  const ref = new WeakRef(ch);
-  out_channels.map.set(ch, ref);
-  out_channels.set.add(ref);
-  out_channels.finalization.register(ch, ref, ch);
+function P(a) {
+  const b = new WeakRef(a);
+  c.map.set(a, b);
+  c.set.add(b);
+  c.finalization.register(a, b, a);
 }
 
-function unregister_channel(ch) {
-  const ref = out_channels.map.get(ch);
-  if (ref) {
-    out_channels.map.delete(ch);
-    out_channels.set.delete(ref);
-    out_channels.finalization.unregister(ch);
+function T(a) {
+  const b = c.map.get(a);
+  if (b) {
+    c.map.delete(a);
+    c.set.delete(b);
+    c.finalization.unregister(a);
   }
 }
 
-function channel_list() {
-  return [...out_channels.set].map((ref) => ref.deref()).filter((ch) => ch);
+function B() {
+  return [...c.set].map((a) => a.deref()).filter((a) => a);
 }
 
-const decoder = new TextDecoder("utf-8", { ignoreBOM: 1 });
-const encoder = new TextEncoder();
+const l = new TextDecoder("utf-8", { ignoreBOM: 1 });
+const C = new TextEncoder();
 
-function hash_int(h, d) {
-  d = Math.imul(d, 0xcc9e2d51 | 0);
-  d = (d << 15) | (d >>> 17); // ROTL32(d, 15);
-  d = Math.imul(d, 0x1b873593);
-  h ^= d;
-  h = (h << 13) | (h >>> 19); //ROTL32(h, 13);
-  return (((h + (h << 2)) | 0) + (0xe6546b64 | 0)) | 0;
+function F(a, b) {
+  b = Math.imul(b, 0xcc9e2d51 | 0);
+  b = (b << 15) | (b >>> 17);
+  b = Math.imul(b, 0x1b873593);
+  a ^= b;
+  a = (a << 13) | (a >>> 19);
+  return (((a + (a << 2)) | 0) + (0xe6546b64 | 0)) | 0;
 }
 
-function hash_string(h, s) {
-  for (var i = 0; i < s.length; i++) h = hash_int(h, s.charCodeAt(i));
-  return h ^ s.length;
+function G(a, b) {
+  for (var c = 0; c < b.length; c++) a = F(a, b.charCodeAt(c));
+  return a ^ b.length;
 }
 
-const bindings = {
+function k(a, b) {
+  var c;
+  if (a.isFile()) c = 0;
+  else if (a.isDirectory()) c = 1;
+  else if (a.isCharacterDevice()) c = 2;
+  else if (a.isBlockDevice()) c = 3;
+  else if (a.isSymbolicLink()) c = 4;
+  else if (a.isFIFO()) c = 5;
+  else if (a.isSocket()) c = 6;
+  return x(
+    b,
+    a.dev,
+    a.ino | 0,
+    c,
+    a.mode,
+    a.nlink,
+    a.uid,
+    a.gid,
+    a.rdev,
+    BigInt(a.size),
+    a.atimeMs / 1000,
+    a.mtimeMs / 1000,
+    a.ctimeMs / 1000,
+  );
+}
+
+const w = {
   jstag:
     WebAssembly.JSTag ||
-    // ZZZ not supported in Firefox yet
-    new WebAssembly.Tag({ parameters: ["externref"], results: [] }),
-  identity: (x) => x,
-  from_bool: (x) => !!x,
-  get: (x, y) => x[y],
-  set: (x, y, z) => (x[y] = z),
-  delete: (x, y) => delete x[y],
-  instanceof: (x, y) => x instanceof y,
-  typeof: (x) => typeof x,
-  eval: evalFn,
-  equals: (x, y) => x == y,
-  strict_equals: (x, y) => x === y,
-  fun_call: (f, o, args) => f.apply(o, args),
-  meth_call: (o, f, args) => o[f].apply(o, args),
-  new_array: (n) => new Array(n),
+    new WebAssembly.Tag({
+      parameters: ["externref"],
+      results: [],
+    }),
+  identity: (a) => a,
+  from_bool: (a) => !!a,
+  get: (a, b) => a[b],
+  set: (a, b, c) => (a[b] = c),
+  delete: (a, b) => delete a[b],
+  instanceof: (a, b) => a instanceof b,
+  typeof: (a) => typeof a,
+  equals: (a, b) => a == b,
+  strict_equals: (a, b) => a === b,
+  fun_call: (a, b, c) => a.apply(b, c),
+  meth_call: (a, b, c) => a[b].apply(a, c),
+  new_array: (a) => new Array(a),
   new_obj: () => ({}),
-  new: (c, args) => new c(...args),
+  new: (a, b) => new a(...b),
   global_this: globalThis,
-  iter_props: (o, f) => {
-    for (var nm in o) if (o.hasOwnsProperty(nm)) f(nm);
+  iter_props: (a, b) => {
+    for (var c in a) if (Object.hasOwn(a, c)) b(c);
   },
   array_length: (a) => a.length,
-  array_get: (a, i) => a[i],
-  array_set: (a, i, v) => (a[i] = v),
-  read_string: (l) => decoder.decode(new Uint8Array(buffer, 0, l)),
-  read_string_stream: (l, stream) =>
-    decoder.decode(new Uint8Array(buffer, 0, l), { stream }),
-  append_string: (s1, s2) => s1 + s2,
-  write_string: (s) => {
-    var start = 0,
-      len = s.length;
-    while (1) {
-      let { read, written } = encoder.encodeInto(s.slice(start), out_buffer);
-      len -= read;
-      if (!len) return written;
-      caml_extract_string(written);
-      start += read;
+  array_get: (a, b) => a[b],
+  array_set: (a, b, c) => (a[b] = c),
+  read_string: (a) => l.decode(new Uint8Array(h, 0, a)),
+  read_string_stream: (a, b) =>
+    l.decode(new Uint8Array(h, 0, a), {
+      stream: b,
+    }),
+  append_string: (a, b) => a + b,
+  write_string: (a) => {
+    var c = 0,
+      b = a.length;
+    for (; ;) {
+      const { read: d, written: e } = C.encodeInto(a.slice(c), O);
+      b -= d;
+      if (!b) return e;
+      z(e);
+      c += d;
     }
   },
-  compare_strings: (s1, s2) => (s1 < s2 ? -1 : +(s1 > s2)),
-  hash_string,
-  is_string: (v) => +(typeof v === "string"),
-  ta_create: (k, sz) => new typed_arrays[k](sz),
-  ta_normalize: (a) =>
-    a instanceof Uint32Array
-      ? new Int32Array(a.buffer, a.byteOffset, a.length)
-      : a,
-  ta_kind: (a) => typed_arrays.findIndex((c) => a instanceof c),
+  ta_create: (a, b) => new u[a](b),
+  ta_normalize: (a) => (a instanceof Uint32Array ? new Int32Array(a.buffer, a.byteOffset, a.length) : a),
+  ta_kind: (b) => u.findIndex((a) => b instanceof a),
   ta_length: (a) => a.length,
-  ta_get_f64: (a, i) => a[i],
-  ta_get_f32: (a, i) => a[i],
-  ta_get_i32: (a, i) => a[i],
-  ta_get_i16: (a, i) => a[i],
-  ta_get_ui16: (a, i) => a[i],
-  ta_get_i8: (a, i) => a[i],
-  ta_get_ui8: (a, i) => a[i],
-  ta_set_f64: (a, i, v) => (a[i] = v),
-  ta_set_f32: (a, i, v) => (a[i] = v),
-  ta_set_i32: (a, i, v) => (a[i] = v),
-  ta_set_i16: (a, i, v) => (a[i] = v),
-  ta_set_ui16: (a, i, v) => (a[i] = v),
-  ta_set_i8: (a, i, v) => (a[i] = v),
-  ta_set_ui8: (a, i, v) => (a[i] = v),
-  ta_fill: (a, v) => a.fill(v),
-  ta_blit: (s, d) => d.set(s),
-  ta_subarray: (a, i, j) => a.subarray(i, j),
-  ta_set: (a, b, i) => a.set(b, i),
-  ta_new: (len) => new Uint8Array(len),
-  ta_copy: (ta, t, s, n) => ta.copyWithin(t, s, n),
-  ta_bytes: (a) =>
-    new Uint8Array(a.buffer, a.byteOffset, a.length * a.BYTES_PER_ELEMENT),
-  wrap_callback: (f) =>
-    function () {
-      var n = arguments.length;
-      if (n > 0) {
-        var args = new Array(n);
-        for (var i = 0; i < n; i++) args[i] = arguments[i];
-      } else {
-        args = [undefined];
-      }
-      return caml_callback(f, args.length, args, 1);
+  ta_get_f64: (a, b) => a[b],
+  ta_get_f32: (a, b) => a[b],
+  ta_get_i32: (a, b) => a[b],
+  ta_get_i16: (a, b) => a[b],
+  ta_get_ui16: (a, b) => a[b],
+  ta_get_i8: (a, b) => a[b],
+  ta_get_ui8: (a, b) => a[b],
+  ta_get16_ui8: (a, b) => a[b] | (a[b + 1] << 8),
+  ta_get32_ui8: (a, b) => a[b] | (a[b + 1] << 8) | (a[b + 2] << 16) | (a[b + 3] << 24),
+  ta_set_f64: (a, b, c) => (a[b] = c),
+  ta_set_f32: (a, b, c) => (a[b] = c),
+  ta_set_i32: (a, b, c) => (a[b] = c),
+  ta_set_i16: (a, b, c) => (a[b] = c),
+  ta_set_ui16: (a, b, c) => (a[b] = c),
+  ta_set_i8: (a, b, c) => (a[b] = c),
+  ta_set_ui8: (a, b, c) => (a[b] = c),
+  ta_set16_ui8: (a, b, c) => {
+    a[b] = c;
+    a[b + 1] = c >> 8;
+  },
+  ta_set32_ui8: (a, b, c) => {
+    a[b] = c;
+    a[b + 1] = c >> 8;
+    a[b + 2] = c >> 16;
+    a[b + 3] = c >> 24;
+  },
+  ta_fill: (a, b) => a.fill(b),
+  ta_blit: (a, b) => b.set(a),
+  ta_subarray: (a, b, c) => a.subarray(b, c),
+  ta_set: (a, b, c) => a.set(b, c),
+  ta_new: (a) => new Uint8Array(a),
+  ta_copy: (a, b, c, d) => a.copyWithin(b, c, d),
+  ta_bytes: (a) => new Uint8Array(a.buffer, a.byteOffset, a.length * a.BYTES_PER_ELEMENT),
+  ta_blit_from_string: (a, b, c, d, e) => {
+    for (let f = 0; f < e; f++) c[d + f] = R(a, b + f);
+  },
+  ta_blit_to_string: (a, b, c, d, e) => {
+    for (let f = 0; f < e; f++) S(c, d + f, a[b + f]);
+  },
+  wrap_callback: (b) =>
+    function(...a) {
+      if (a.length === 0) a = [undefined];
+      return d(b, a.length, a, 1);
     },
-  wrap_callback_args: (f) =>
-    function () {
-      var n = arguments.length;
-      var args = new Array(n);
-      for (var i = 0; i < n; i++) args[i] = arguments[i];
-      return caml_callback(f, 1, [args], 0);
+  wrap_callback_args: (b) =>
+    function(...a) {
+      return d(b, 1, [a], 0);
     },
-  wrap_callback_strict: (arity, f) =>
-    function () {
-      var n = arguments.length;
-      var args = new Array(arity);
-      var len = Math.min(arguments.length, arity);
-      for (var i = 0; i < len; i++) args[i] = arguments[i];
-      return caml_callback(f, arity, args, 0);
+  wrap_callback_strict: (c, b) =>
+    function(...a) {
+      a.length = c;
+      return d(b, c, a, 0);
     },
-  wrap_callback_unsafe: (f) =>
-    function () {
-      var n = arguments.length;
-      var args = new Array(n);
-      for (var i = 0; i < n; i++) args[i] = arguments[i];
-      return caml_callback(f, args.length, args, 2);
+  wrap_callback_unsafe: (b) =>
+    function(...a) {
+      return d(b, a.length, a, 2);
     },
-  wrap_meth_callback: (f) =>
-    function () {
-      var n = arguments.length;
-      var args = new Array(n + 1);
-      args[0] = this;
-      for (var i = 0; i < n; i++) args[i + 1] = arguments[i];
-      return caml_callback(f, args.length, args, 1);
+  wrap_meth_callback: (b) =>
+    function(...a) {
+      a.unshift(this);
+      return d(b, a.length, a, 1);
     },
-  wrap_meth_callback_args: (f) =>
-    function () {
-      var n = arguments.length;
-      var args = new Array(n);
-      for (var i = 0; i < n; i++) args[i] = arguments[i];
-      return caml_callback(f, 2, [this, args], 0);
+  wrap_meth_callback_args: (b) =>
+    function(...a) {
+      return d(b, 2, [this, a], 0);
     },
-  wrap_meth_callback_strict: (arity, f) =>
-    function () {
-      var args = new Array(arity + 1);
-      var len = Math.min(arguments.length, arity);
-      args[0] = this;
-      for (var i = 0; i < len; i++) args[i + 1] = arguments[i];
-      return caml_callback(f, args.length, args, 0);
+  wrap_meth_callback_strict: (c, b) =>
+    function(...a) {
+      a.length = c;
+      a.unshift(this);
+      return d(b, a.length, a, 0);
     },
-  wrap_meth_callback_unsafe: (f) =>
-    function () {
-      var n = arguments.length;
-      var args = new Array(n + 1);
-      args[0] = this;
-      for (var i = 0; i < n; i++) args[i + 1] = arguments[i];
-      return caml_callback(f, args.length, args, 2);
+  wrap_meth_callback_unsafe: (b) =>
+    function(...a) {
+      a.unshift(this);
+      return d(b, a.length, a, 2);
     },
-  wrap_fun_arguments: (f) =>
-    function () {
-      return f(arguments);
+  wrap_fun_arguments: (b) =>
+    function(...a) {
+      return b(a);
     },
-  format_float: (prec, conversion, x) => {
-    function toFixed(x, dp) {
-      if (Math.abs(x) < 1.0) {
-        return x.toFixed(dp);
-      } else {
-        var e = parseInt(x.toString().split("+")[1]);
-        if (e > 20) {
-          e -= 20;
-          x /= Math.pow(10, e);
-          x += new Array(e + 1).join("0");
-          if (dp > 0) {
-            x = x + "." + new Array(dp + 1).join("0");
-          }
-          return x;
-        } else return x.toFixed(dp);
+  format_float: (a, b, c, d) => {
+    function j(a, b) {
+      if (Math.abs(a) < 1.0) return a.toFixed(b);
+      else {
+        var c = Number.parseInt(a.toString().split("+")[1]);
+        if (c > 20) {
+          c -= 20;
+          a /= Math.pow(10, c);
+          a += new Array(c + 1).join("0");
+          if (b > 0) a = a + "." + new Array(b + 1).join("0");
+          return a;
+        } else return a.toFixed(b);
       }
     }
-    switch (conversion) {
+    switch (b) {
       case 0:
-        var s = x.toExponential(prec);
-        // exponent should be at least two digits
-        var i = s.length;
-        if (s.charAt(i - 3) == "e")
-          s = s.slice(0, i - 1) + "0" + s.slice(i - 1);
+        var e = d.toExponential(a),
+          f = e.length;
+        if (e.charAt(f - 3) === "e") e = e.slice(0, f - 1) + "0" + e.slice(f - 1);
         break;
       case 1:
-        s = toFixed(x, prec);
+        e = j(d, a);
         break;
       case 2:
-        prec = prec ? prec : 1;
-        s = x.toExponential(prec - 1);
-        var j = s.indexOf("e");
-        var exp = +s.slice(j + 1);
-        if (exp < -4 || x >= 1e21 || x.toFixed(0).length > prec) {
-          // remove trailing zeroes
-          var i = j - 1;
-          while (s.charAt(i) == "0") i--;
-          if (s.charAt(i) == ".") i--;
-          s = s.slice(0, i + 1) + s.slice(j);
-          i = s.length;
-          if (s.charAt(i - 3) == "e")
-            s = s.slice(0, i - 1) + "0" + s.slice(i - 1);
+        a = a ? a : 1;
+        e = d.toExponential(a - 1);
+        var i = e.indexOf("e"),
+          h = +e.slice(i + 1);
+        if (h < -4 || d >= 1e21 || d.toFixed(0).length > a) {
+          var f = i - 1;
+          while (e.charAt(f) === "0") f--;
+          if (e.charAt(f) === ".") f--;
+          e = e.slice(0, f + 1) + e.slice(i);
+          f = e.length;
+          if (e.charAt(f - 3) === "e") e = e.slice(0, f - 1) + "0" + e.slice(f - 1);
           break;
         } else {
-          var p = prec;
-          if (exp < 0) {
-            p -= exp + 1;
-            s = x.toFixed(p);
-          } else while (((s = x.toFixed(p)), s.length > prec + 1)) p--;
-          if (p) {
-            // remove trailing zeroes
-            var i = s.length - 1;
-            while (s.charAt(i) == "0") i--;
-            if (s.charAt(i) == ".") i--;
-            s = s.slice(0, i + 1);
+          var g = a;
+          if (h < 0) {
+            g -= h + 1;
+            e = d.toFixed(g);
+          } else while (((e = d.toFixed(g)), e.length > a + 1)) g--;
+          if (g) {
+            var f = e.length - 1;
+            while (e.charAt(f) === "0") f--;
+            if (e.charAt(f) === ".") f--;
+            e = e.slice(0, f + 1);
           }
         }
         break;
     }
-    return s;
+    return c ? " " + e : e;
   },
   gettimeofday: () => new Date().getTime() / 1000,
-  gmtime: (t) => {
-    var d = new Date(t * 1000);
-    var d_num = d.getTime();
-    var januaryfirst = new Date(Date.UTC(d.getUTCFullYear(), 0, 1)).getTime();
-    var doy = Math.floor((d_num - januaryfirst) / 86400000);
-    return caml_alloc_tm(
-      d.getUTCSeconds(),
-      d.getUTCMinutes(),
-      d.getUTCHours(),
-      d.getUTCDate(),
-      d.getUTCMonth(),
-      d.getUTCFullYear() - 1900,
-      d.getUTCDay(),
-      doy,
+  gmtime: (a) => {
+    var b = new Date(a * 1000),
+      c = b.getTime(),
+      e = new Date(Date.UTC(b.getUTCFullYear(), 0, 1)).getTime(),
+      d = Math.floor((c - e) / 86400000);
+    return n(
+      b.getUTCSeconds(),
+      b.getUTCMinutes(),
+      b.getUTCHours(),
+      b.getUTCDate(),
+      b.getUTCMonth(),
+      b.getUTCFullYear() - 1900,
+      b.getUTCDay(),
+      d,
       false,
     );
   },
-  localtime: (t) => {
-    var d = new Date(t * 1000);
-    var d_num = d.getTime();
-    var januaryfirst = new Date(d.getFullYear(), 0, 1).getTime();
-    var doy = Math.floor((d_num - januaryfirst) / 86400000);
-    var jan = new Date(d.getFullYear(), 0, 1);
-    var jul = new Date(d.getFullYear(), 6, 1);
-    var stdTimezoneOffset = Math.max(
-      jan.getTimezoneOffset(),
-      jul.getTimezoneOffset(),
-    );
-    return caml_alloc_tm(
-      d.getSeconds(),
-      d.getMinutes(),
-      d.getHours(),
-      d.getDate(),
-      d.getMonth(),
-      d.getFullYear() - 1900,
-      d.getDay(),
-      doy,
-      d.getTimezoneOffset() < stdTimezoneOffset,
+  localtime: (a) => {
+    var b = new Date(a * 1000),
+      c = b.getTime(),
+      f = new Date(b.getFullYear(), 0, 1).getTime(),
+      d = Math.floor((c - f) / 86400000),
+      e = new Date(b.getFullYear(), 0, 1),
+      g = new Date(b.getFullYear(), 6, 1),
+      h = Math.max(e.getTimezoneOffset(), g.getTimezoneOffset());
+    return n(
+      b.getSeconds(),
+      b.getMinutes(),
+      b.getHours(),
+      b.getDate(),
+      b.getMonth(),
+      b.getFullYear() - 1900,
+      b.getDay(),
+      d,
+      b.getTimezoneOffset() < h,
     );
   },
-  mktime: (year, month, day, h, m, s) =>
-    new Date(year, month, day, h, m, s).getTime(),
+  mktime: (a, b, c, d, e, f) => new Date(a, b, c, d, e, f).getTime(),
   random_seed: () => crypto.getRandomValues(new Int32Array(12)),
-  open: (p, flags, perm) =>
-    fs.openSync(
-      p,
-      open_flags.reduce((f, v, i) => (flags & (1 << i) ? f | v : f), 0),
-      perm,
-    ),
-  close: (fd) => fs.closeSync(fd),
-  write: (fd, b, o, l, p) => (
-    console[fd == 2 ? "error" : "log"](
-      typeof b == "string" ? b : decoder.decode(b.slice(o, o + l)),
-    ),
-    l
-  ),
-  read: (fd, b, o, l, p) => fs.readSync(fd, b, o, l, p),
-  file_size: (fd) => fs.fstatSync(fd, { bigint: true }).size,
-  register_channel,
-  unregister_channel,
-  channel_list,
-  exit: (n) => noop(),
+  open: (a, d, c) => {
+    a = abs(a);
+    return fs.openSync(
+      a,
+      open_flags.reduce((a, b, c) => (d & (1 << c) ? a | b : a), 0),
+      c,
+    );
+  },
+  close: (a) => {
+    a = abs(a);
+    return fs.closeSync(a);
+  },
+  write: (a, b, c, d, e) => {
+    return fs.writeSync(a, b, c, d, e === null ? e : Number(e));
+  },
+  read: (a, b, c, d, e) => {
+    return fs.readSync(a, b, c, d, e);
+  },
+  file_size: (a) => {
+    return fs.fstatSync(a, {
+      bigint: true,
+    }).size;
+  },
+  register_channel: P,
+  unregister_channel: T,
+  channel_list: B,
+  exit: (a) => console.log(`exited ${a}`),
   argv: () => ["a.out"],
-  getenv: (n) => null,
-  system: (c) => na("child_process"),
+  on_windows: () => false,
+  getenv: () => null,
+  system: () => na("node:child_process"),
+  isatty: () => false,
   time: () => performance.now(),
   getcwd: () => cwd,
-  chdir: (x) => process.chdir(x),
-  mkdir: (p, m) => fs.mkdirSync(p, m),
-  unlink: (p) => fs.unlinkSync(p),
-  readdir: (p) => fs.readdirSync(p),
-  file_exists: (p) => +fs.existsSync(p),
-  rename: (o, n) => fs.renameSync(o, n),
-  throw: (e) => {
-    throw e;
+  chdir: (a) => na("node:process.chdir()"),
+  mkdir: (a, b) => fs.mkdirSync(a, b),
+  rmdir: (a) => fs.rmdirSync(a),
+  unlink: (a) => fs.unlinkSync(a),
+  readdir: (a) => fs.readdirSync(a),
+  stat: (a, b) => k(fs.statSync(a), b),
+  lstat: (a, b) => k(fs.lstatSync(a), b),
+  fstat: (a, b) => k(fs.fstatSync(a), b),
+  file_exists: (a) => +fs.existsSync(a),
+  is_directory: (a) => +fs.lstatSync(a).isDirectory(),
+  utimes: (a, b, c) => fs.utimesSync(a, b, c),
+  truncate: (a, b) => fs.truncateSync(a, b),
+  ftruncate: (a, b) => fs.ftruncateSync(a, b),
+  rename: (a, b) => fs.renameSync(a, b),
+  throw: (a) => {
+    throw a;
   },
-  start_fiber: (x) => na("effects"),
-  suspend_fiber: () => na("effects"),
-  resume_fiber: (k, v) => na("effects"),
-  weak_new: (v) => new WeakRef(v),
-  weak_deref: (w) => {
-    var v = w.deref();
-    return v == undefined ? null : v;
+  start_fiber: () => na("ocaml:effects"),
+  suspend_fiber: () => na("ocaml:effects"),
+  resume_fiber: () => na("ocaml:effects"),
+  weak_new: (a) => new WeakRef(a),
+  weak_deref: (a) => {
+    var b = a.deref();
+    return b === undefined ? null : b;
   },
   weak_map_new: () => new WeakMap(),
   map_new: () => new Map(),
-  map_get: (m, x) => {
-    var v = m.get(x);
-    return v == undefined ? null : v;
+  map_get: (a, b) => {
+    var c = a.get(b);
+    return c === undefined ? null : c;
   },
-  map_set: (m, x, v) => m.set(x, v),
-  log: (x) => console.log("ZZZZZ", x),
+  map_set: (a, b, c) => a.set(b, c),
+  map_delete: (a, b) => a.delete(b),
+  log: (a) => console.log(a),
+};
+
+const m = {
+  test: (a) => +(typeof a === "string"),
+  compare: (a, b) => (a < b ? -1 : +(a > b)),
+  hash: G,
+  decodeStringFromUTF8Array: () => "",
+  encodeStringToUTF8Array: () => 0,
+  fromCharCodeArray: () => "",
 };
 
 const imports = {
-  Math: math,
-  bindings,
-  env: {},
+  Math: M,
+  bindings: w,
+  "wasm:js-string": m,
+  "wasm:text-decoder": m,
+  "wasm:text-encoder": m,
   js: {},
+  env: {},
   strings,
   fragments,
+};
+
+const compileOptions = {
+  builtins: ["js-string", "text-decoder", "text-encoder"],
 };
 
 const wasm = await WebAssembly.instantiateStreaming(
   fetch(src),
   imports,
+  compileOptions,
 );
 
 var {
-  caml_callback,
-  caml_handle_uncaught_exception,
-  caml_buffer,
-  caml_extract_string,
+  caml_callback: d,
+  caml_alloc_tm: n,
+  caml_alloc_stat: x,
+  caml_handle_uncaught_exception: o,
+  caml_buffer: y,
+  caml_extract_string: z,
+  string_get: R,
+  string_set: S,
   _initialize,
-} = wasm.instance.exports;
+} = wasm.instance.exports,
+  h = y?.buffer,
+  O = h && new Uint8Array(h, 0, h.length);
 
-const buffer = caml_buffer?.buffer;
-var out_buffer = buffer && new Uint8Array(buffer, 0, buffer.length);
-
-globalThis.addEventListener(
-  "error",
-  (event) => event.error && caml_handle_uncaught_exception(event.error),
-);
-
-export { cwd, fs };
 export async function initialize() {
+  globalThis.addEventListener("error", (a) => a.error && o(a.error));
   await _initialize();
-  return await instance;
+  return await compiler;
 }

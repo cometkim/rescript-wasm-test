@@ -3,6 +3,6 @@
   "private": true,
   "packageManager": "yarn@4.7.0",
   "devDependencies": {
-    "serve": "^14.2.1"
+    "serve": "^14.2.4"
   }
 }
